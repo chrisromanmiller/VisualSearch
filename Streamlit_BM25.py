@@ -32,8 +32,7 @@ if button:
     ids, df = combined_search(uploaded_file, query)
     display_images_ids_st(ids, df)
         
-else:
-    st.write('Goodbye')
+
 
     
 

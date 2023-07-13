@@ -28,17 +28,17 @@ def combined_search(image, query):
     df=df.dropna(subset='productDisplayName')
     
     
-    if (query is not None and image is None):
+    if (query != "" and image is None):
         ids, subset = bm25search_get_n_ids(query, df, 20)
         return ids, df
         
     
-    if (query is None and image is not None):
+    if (query == "" and image is not None):
         ids = clip_search_get_n_ids(image, df, 20)
-        return ids, df
+        return ids[0], df
         
         
-    if (query is not None and image is not None):
+    if (query != "" and image is not None):
         ids1, subset_df1 = bm25search_get_nonzero_ids(query, df)
         ids2, subset_df2 = clip_search_get_n_ids(image, df, 100)
         new_ids = np.intersect1d(np.array(ids1), np.array(ids2)).tolist()
