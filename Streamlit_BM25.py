@@ -12,19 +12,13 @@ from combined_search import *
 
 with st.sidebar:
     uploaded_file = st.file_uploader("Choose an image", type=['png', 'jpg'])
-    
     query = st.text_input("BM25 Search")
-    
     button = st.button("Search")
-
 
 if uploaded_file is not None:
     st.image(uploaded_file, width = 200)
 
 st.text('Results:')
-
-
-
 
 
 
