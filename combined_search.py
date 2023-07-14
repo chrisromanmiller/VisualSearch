@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+from scipy.special import softmax
+
 import torch
 from torchvision import models, transforms
 from PIL import Image
@@ -27,25 +29,42 @@ def combined_search(image, query):
     df = df[df.id.isin(available_ids)] #some images are not actually available
     df=df.dropna(subset='productDisplayName')
     
+    length = df.shape[0]
     
-    if (query != "" and image is None):
-        ids, subset = bm25search_get_n_ids(query, df, 20)
-        return ids, df
-        
-    
-    if (query == "" and image is not None):
-        ids = clip_search_get_n_ids(image, df, 20)
-        return ids[0], df
-        
-        
-    if (query != "" and image is not None):
-        ids1, subset_df1 = bm25search_get_nonzero_ids(query, df)
-        ids2, subset_df2 = clip_search_get_n_ids(image, df, 100)
-        new_ids = np.intersect1d(np.array(ids1), np.array(ids2)).tolist()
-        
-        return new_ids, df
+    if (query != ""):
+        bm_sm = np.zeros(length)
+        for word in query.split(' '):
+            bm_scores = bm25search_get_scores(word, df)
+            bm_sm = np.add(bm_sm, np.not_equal(np.zeros_like(bm_scores), bm_scores))
+    else:
+        bm_sm = np.ones(length)
     
     
+    
+    if (image is not None):
+        distances = clip_search_get_distances(image, df)
+        clip_distances = distances[0]
+        clip_sm = softmax(-clip_distances)
+        clip_sm = clip_sm / np.max(clip_sm)
+    else:
+        clip_sm = np.ones(length)
+    
+    
+    
+    
+    
+    result = np.multiply(bm_sm, clip_sm)
+    
+    indices = np.flip(np.argsort(result)).tolist()
+    df_subset = df.iloc[indices[0:20]]
+    ids = df_subset.id.astype(str).tolist()
+    
+        
+    if (query == "" and image is None):        
+        return [], df
+    
+
+    return ids, df
         
         
 

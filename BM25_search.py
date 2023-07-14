@@ -41,6 +41,19 @@ def bm25search_get_scores(query, df):
 
 
 
+
+def bm25search_get_scores_and_indices(query, df):
+    
+    doc_scores = bm25search_get_scores(query, df)
+    indices = np.flip(np.argsort(doc_scores))
+
+    return doc_scores[indices], indices
+
+
+
+
+
+
 def bm25search_get_n_ind(query, df, n):
 
     doc_scores = bm25search_get_scores(query, df)
