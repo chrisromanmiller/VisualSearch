@@ -12,7 +12,6 @@ import faiss
 
 
 
-
 def clip_search_get_n_ids(path_to_image, df, n):
 
     custom_image = Image.open(path_to_image)
@@ -100,8 +99,11 @@ def clip_search_get_distances(path_to_image, df):
     k = df.shape[0]
     
     subset = np.array([np.arange(k)])
-    distances = compute_distance_subset(index, custom_embedding.detach().numpy(), subset)
+    distances, I = index.search(custom_embedding.detach().numpy(), k)
 
+
+    distances[0] = distances[0][np.argsort(I[0])]    
+    
     return distances
 
 
