@@ -31,7 +31,10 @@ def combined_search(image, query):
     
     length = df.shape[0]
     
-    if (query != ""):
+    
+    if (query != "" and image is None):
+        bm_sm = bm25search_get_scores(query, df)
+    elif (query != ""):
         bm_sm = np.zeros(length)
         for word in query.split(' '):
             bm_scores = bm25search_get_scores(word, df)
