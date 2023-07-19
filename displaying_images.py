@@ -4,6 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import streamlit as st
 
+images_path = "./myntradataset/images/"
 
 def display_images_and_titles(filepaths, titles):
     # Create a 4x5 grid of subplots
@@ -27,11 +28,11 @@ def display_images_and_titles(filepaths, titles):
 
     # Show the plot
     plt.show()
-    
-    
-    
+
+
+
 def display_images_and_titles_from_ind(ind, df):
-    directory = "./myntradataset/images/"
+    directory = images_path
 
     titles = df.productDisplayName.tolist()
 
@@ -43,14 +44,14 @@ def display_images_and_titles_from_ind(ind, df):
     result_titles = np_arr[ind].tolist()
 
     display_images_and_titles(filepaths, result_titles)
-    
-    
+
+
 
 
 def display_images_titles_from_ids(ids, df):
 
-    directory = "./myntradataset/images/"
-    
+    directory = images_path
+
     df_new_index = df.copy()
     df_new_index['id'] = df_new_index['id'].astype(str)
     df_new_index.set_index("id",inplace = True)
@@ -58,9 +59,9 @@ def display_images_titles_from_ids(ids, df):
     filenames = df_new_index.index.tolist()
     filepaths = [f"{os.path.join(directory,filename)}.jpg"  for filename in filenames]
     titles =  df_new_index.productDisplayName.tolist()
-    
+
     display_images_and_titles(filepaths, titles)
-    
+
 
 
 
@@ -72,13 +73,13 @@ def display_single_image_id_st(single_id, directory, column):
     column.image(directory + single_id + ".jpg", use_column_width=True)
 
 
-    
-    
-    
+
+
+
 def display_images_ids_st(ids, df):
 
-    directory = "./myntradataset/images/"
-    
+    directory = images_path
+
     num_columns = 5  # Number of columns in the grid
     num_images = len(ids)
     num_rows = (num_images + num_columns - 1) // num_columns
@@ -93,8 +94,3 @@ def display_images_ids_st(ids, df):
                     cols[col].write(df[df['id'] == int(ids[idx])].productDisplayName.iloc[0])
                 else:
                     break
-    
-    
-    
-    
-    

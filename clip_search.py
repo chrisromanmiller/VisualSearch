@@ -11,6 +11,8 @@ import time
 import faiss
 
 
+image_tensor_path = "./tensors/image_tensor.pt"
+
 
 def clip_search_get_n_ids(path_to_image, df, n):
 
@@ -20,7 +22,7 @@ def clip_search_get_n_ids(path_to_image, df, n):
     model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
     processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
-    knn_vectors = torch.load("./tensors/image_tensor.pt")
+    knn_vectors = torch.load(image_tensor_path)
     knn_labels = df.id.astype(str).tolist()
 
     # Convert data to numpy arrays for use with faiss
@@ -46,13 +48,13 @@ def clip_search_get_n_ids(path_to_image, df, n):
 
     # Retrieve the labels of the nearest neighbors if there are any
     neighbor_ids = [knn_labels[i] for i in I[0]]
-    
+
     subset_df = df[df.id.isin(neighbor_ids)]
 
     return neighbor_ids, subset_df
-    
-    
-    
+
+
+
 def compute_distance_subset(index, xq, subset):
     n, _ = xq.shape
     _, k = subset.shape
@@ -63,19 +65,22 @@ def compute_distance_subset(index, xq, subset):
         faiss.swig_ptr(subset)
     )
     return distances
-    
 
-    
-    
+
+
+
 def clip_search_get_distances(path_to_image, df):
 
-    custom_image = Image.open(path_to_image)
+    if type(path_to_image) is not np.ndarray:
+        custom_image = Image.open(path_to_image)
+    else:
+        custom_image = path_to_image
 
     # Loads model
     model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
     processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
-    knn_vectors = torch.load("./tensors/image_tensor.pt")
+    knn_vectors = torch.load(image_tensor_path)
     knn_labels = df.id.astype(str).tolist()
 
     # Convert data to numpy arrays for use with faiss
@@ -97,29 +102,11 @@ def clip_search_get_distances(path_to_image, df):
 
     # Query the index with the custom image embedding
     k = df.shape[0]
-    
+
     subset = np.array([np.arange(k)])
     distances, I = index.search(custom_embedding.detach().numpy(), k)
 
 
-    distances[0] = distances[0][np.argsort(I[0])]    
-    
+    distances[0] = distances[0][np.argsort(I[0])]
+
     return distances
-
-
-#path_to_image = "/home/hunk/Pictures/next-level_3600_maroon.jpg"
-#distances = clip_search_get_distances(path_to_image, df)
-
-
-#print(np.array(-D[0]))
-
-#print(distances)
-
-
-
-#neighbor_labels = clip_search_get_n_ids(path_to_image, "", df, n)
-
-
-#from displaying_images import display_images_titles_from_ids
-
-#display_images_titles_from_ids(neighbor_labels, df)
