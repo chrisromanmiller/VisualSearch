@@ -1,13 +1,10 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import os
 import numpy as np
 import torch
-from torchvision import models, transforms
 from PIL import Image
-from transformers import CLIPModel
-from transformers import CLIPProcessor
-import time
+
+from transformers import CLIPProcessor, CLIPModel
+from transformers import CLIPTokenizer, FlaxCLIPTextModel
 import faiss
 
 
@@ -108,15 +105,66 @@ def clip_image_search_get_distances(path_to_image, df):
     return distances
 
 
-def clip_text_search_get_distances(query, df):
+
+
+
+def clip_image_and_text_search_get_distances(path_to_image, df):
+
+    if type(path_to_image) is not np.ndarray:
+        custom_image = Image.open(path_to_image)
+    else:
+        custom_image = path_to_image
 
     # Loads model
     model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
     processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
+    knn_vectors = torch.load(image_tensor_path)
+    knn_labels = df.id.astype(str).tolist()
+
+    # Convert data to numpy arrays for use with faiss
+    vectors_np = knn_vectors.numpy()
+
+    # Build the index
+    dimension = vectors_np.shape[1]  # Dimension of the vectors
+    index = faiss.IndexFlatL2(dimension)
+    index.add(vectors_np)
+
+    # Preprocess the custom image
+    custom_input = processor(text=[''], images=custom_image, return_tensors="pt", padding=True)
+
+    # Perform inference on the custom image
+    custom_output = model(**custom_input)
+
+    # Get the custom image embedding
+    custom_embedding = custom_output.image_embeds
+
+    # Query the index with the custom image embedding
+    k = df.shape[0]
+    distances, I = index.search(custom_embedding.detach().numpy(), k)
+    distances[0] = distances[0][np.argsort(I[0])]
+
+    return distances
+
+
+
+
+
+
+def clip_text_search_get_distances(query, df):
+
+    # Loads model
+    model = FlaxCLIPTextModel.from_pretrained("openai/clip-vit-base-patch32")
+    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
+
     text=[query]
 
-    query_vectors = torch.load("./tensors/title_tensor.pt")
+    print(text)
+
+    inputs = tokenizer(text,  padding=True, return_tensors="np")
+    outputs = model(**inputs)
+
+    query_vectors = torch.load("./tensors/text_only_title_tensor.pt")
     query_np = query_vectors.numpy()
 
     # Build the index
@@ -125,11 +173,8 @@ def clip_text_search_get_distances(query, df):
     index = faiss.IndexFlatL2(dimension)
     index.add(query_np)
 
-    custom_input = processor(text=text, images=image_new, return_tensors="pt", padding=True)
-    custom_output = model(**custom_input)
-
     # Get the custom image embedding
-    np_TP = custom_output.text_embeds.detach().cpu().numpy()
+    np_TP = np.array(outputs.pooler_output)
 
     # Select a query vector
     query_vector = np_TP.reshape(1, -1) #This line is different from before

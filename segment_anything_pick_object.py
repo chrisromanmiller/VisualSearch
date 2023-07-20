@@ -1,12 +1,11 @@
 import torch
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
 import cv2
 from segment_anything import sam_model_registry, SamPredictor
 
 
-sam_checkpoint ="./sam_vit_h_4b8939.pth"
+sam_checkpoint ="./tensors/sam_vit_h_4b8939.pth"
 
 
 
