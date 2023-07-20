@@ -10,6 +10,92 @@ sam_checkpoint ="./sam_vit_h_4b8939.pth"
 
 
 
+
+
+def select_rectangle_with_point(image):
+    # Make a copy of the image for display
+    clone = image.copy()
+
+    # Initialize variables for storing coordinates and selection status
+    start_point = None
+    end_point = None
+    extra_point = None
+    selection_completed = False
+
+    def mouse_callback(event, x, y, flags, param):
+        nonlocal start_point, end_point, extra_point, selection_completed
+
+        if event == cv2.EVENT_LBUTTONDOWN:
+            start_point = (x, y)
+
+        elif event == cv2.EVENT_LBUTTONUP:
+            end_point = (x, y)
+            cv2.rectangle(clone, start_point, end_point, (0, 255, 0), 2)
+            cv2.imshow("Image", clone)
+
+        elif event == cv2.EVENT_RBUTTONDOWN:
+            extra_point = (x, y)
+            cv2.circle(clone, extra_point, 3, (0, 0, 255), -1)
+            cv2.imshow("Image", clone)
+
+    # Create a window and set the mouse callback function
+    cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
+    cv2.setMouseCallback("Image", mouse_callback)
+
+    # Start the selection loop
+    while not selection_completed:
+        cv2.imshow("Image", clone)
+        key = cv2.waitKey(1) & 0xFF
+
+        if key == ord("r"):
+            # Reset the selection if 'r' key is pressed
+            clone = image.copy()
+            start_point = None
+            end_point = None
+            extra_point = None
+
+        elif key == ord("c"):
+            # Complete the selection if 'c' key is pressed
+            if start_point is not None and end_point is not None:
+                selection_completed = True
+
+    # Close the OpenCV windows
+    cv2.destroyAllWindows()
+
+    # If the rectangle or the extra point is not selected, return None
+    if start_point is None or end_point is None or extra_point is None:
+        return None
+
+    # Collect coordinates of vertices
+    top_left = (min(start_point[0], end_point[0]), min(start_point[1], end_point[1]))
+    bottom_right = (max(start_point[0], end_point[0]), max(start_point[1], end_point[1]))
+
+    # Return the selected coordinates
+    return top_left, bottom_right, extra_point
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def get_clicked_point(image):
     # Load the image using OpenCV
 
@@ -65,71 +151,70 @@ def get_clicked_point(image):
     else:
         return None
 
+#
+# def show_mask(mask, ax, random_color=False):
+#     if random_color:
+#         color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
+#     else:
+#         color = np.array([30/255, 144/255, 255/255, 0.6])
+#     h, w = mask.shape[-2:]
+#     mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
+#     ax.imshow(mask_image)
+#
+# def show_points(coords, labels, ax, marker_size=375):
+#     pos_points = coords[labels==1]
+#     neg_points = coords[labels==0]
+#     ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
+#     ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
+#
+# def show_box(box, ax):
+#     x0, y0 = box[0], box[1]
+#     w, h = box[2] - box[0], box[3] - box[1]
+#     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))
 
-def show_mask(mask, ax, random_color=False):
-    if random_color:
-        color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
-    else:
-        color = np.array([30/255, 144/255, 255/255, 0.6])
-    h, w = mask.shape[-2:]
-    mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
-    ax.imshow(mask_image)
-
-def show_points(coords, labels, ax, marker_size=375):
-    pos_points = coords[labels==1]
-    neg_points = coords[labels==0]
-    ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
-    ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
-
-def show_box(box, ax):
-    x0, y0 = box[0], box[1]
-    w, h = box[2] - box[0], box[3] - box[1]
-    ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))
 
 
-def segment_anything_pick_object(uploaded_file):
+
+
+
+
+
+def segment_anything_pick_object(uploaded_image):
     model_type = "vit_h"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
     sam.to(device=device)
-
-    image_Seg = np.array(Image.open(uploaded_file))
-
-    clicked_point = get_clicked_point(image_Seg)
     predictor = SamPredictor(sam)
-    predictor.set_image(image_Seg)
 
-    #This is where we'll want to put in Tanuj's code to get user inputs instead of these presets
-    #So you'll need to map you're image and change the 125 and 200 to lie on top of whatever item you want to segment
-    input_point = np.array(clicked_point)
-    input_label = np.array([1])
+    if uploaded_image is not None:
+        image = np.array(Image.open(uploaded_image))
 
-    #Making Mask
-    masks, scores, logits = predictor.predict(
-    point_coords=input_point,
-    point_labels=input_label,
-    multimask_output=True,)
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        predictor.set_image(image_rgb)
 
-    mask_input = logits[np.argmax(scores), :, :]  # Choose the model's best mask
+        top_left, bottom_right, extra_point = select_rectangle_with_point(image_rgb)
 
-    masks, _, _ = predictor.predict(
-    point_coords=input_point,
-    point_labels=input_label,
-    mask_input=mask_input[None, :, :],
-    multimask_output=False,)
+        xyxy = list(top_left)
+        temp = list(bottom_right)
+        xyxy[len(xyxy):] = temp
+        input_box = np.array(xyxy)
+        input_point = np.array(list([extra_point]))
+        input_label = np.array([1])
 
-    int_mask = masks.astype(int)
+        masks, _, _ = predictor.predict(
+            point_coords=input_point,
+            point_labels=input_label,
+            box=input_box,
+            multimask_output=False,
+        )
+        int_mask = masks.astype(int)
 
-    #image_Seg = cv2.cvtColor(image_Seg, cv2.COLOR_YCrCb2BGR)
+        width = image.shape[0]
+        height = image.shape[1]
+        for i in range(width):
+            for j in range(height):
+                # getting the current RGB value of pixel (i,j).
+                if int_mask[0][i][j]==0:
+                    image[i][j]=(255,255,255)
 
-    # Extracting the width and height
-    # of the image:
-    width = image_Seg.shape[0]
-    height = image_Seg.shape[1]
-    for i in range(width):
-        for j in range(height):
-            # getting the current RGB value of pixel (i,j).
-            if int_mask[0][i][j]==0:
-                image_Seg[i][j]=(255,255,255)
-
-    return image_Seg
+    return image
