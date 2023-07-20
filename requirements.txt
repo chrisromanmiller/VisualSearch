@@ -7,3 +7,8 @@ torch==2.0.1
 torchaudio==2.0.2
 torchvision==0.15.2
 transformers==4.30.2
+opencv==4.6.0
+streamlit==1.24.0
+faiss==1.7.4
+os==0.1.4
+webcolors==1.13
