@@ -48,7 +48,7 @@ def combined_search(image, query):
 
 
     if (image is not None):
-        distances = clip_search_get_distances(image, df)
+        distances = clip_image_search_get_distances(image, df)
         clip_distances = distances[0]
         clip_sm = softmax(-clip_distances)
         clip_sm = clip_sm / np.max(clip_sm)

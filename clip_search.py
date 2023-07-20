@@ -12,9 +12,9 @@ import faiss
 
 
 image_tensor_path = "./tensors/image_tensor.pt"
+title_tensor_path = "./tensors/title_tensor.pt"
 
-
-def clip_search_get_n_ids(path_to_image, df, n):
+def clip_image_search_get_n_ids(path_to_image, df, n):
 
     custom_image = Image.open(path_to_image)
 
@@ -69,7 +69,7 @@ def compute_distance_subset(index, xq, subset):
 
 
 
-def clip_search_get_distances(path_to_image, df):
+def clip_image_search_get_distances(path_to_image, df):
 
     if type(path_to_image) is not np.ndarray:
         custom_image = Image.open(path_to_image)
@@ -102,11 +102,41 @@ def clip_search_get_distances(path_to_image, df):
 
     # Query the index with the custom image embedding
     k = df.shape[0]
-
-    subset = np.array([np.arange(k)])
     distances, I = index.search(custom_embedding.detach().numpy(), k)
+    distances[0] = distances[0][np.argsort(I[0])]
+
+    return distances
 
 
+def clip_text_search_get_distances(query, df):
+
+    # Loads model
+    model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+    processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
+    knn_vectors = torch.load(title_tensor_path)
+    knn_labels = df.id.astype(str).tolist()
+
+    # Convert data to numpy arrays for use with faiss
+    vectors_np = knn_vectors.numpy()
+
+    # Build the index
+    dimension = vectors_np.shape[1]  # Dimension of the vectors
+    index = faiss.IndexFlatL2(dimension)
+    index.add(vectors_np)
+
+    # Preprocess the custom image
+    custom_input = processor(text=[''], images=custom_image, return_tensors="pt", padding=True)
+
+    # Perform inference on the custom image
+    custom_output = model(**custom_input)
+
+    # Get the custom image embedding
+    custom_embedding = custom_output.image_embeds
+
+    # Query the index with the custom image embedding
+    k = df.shape[0]
+    distances, I = index.search(custom_embedding.detach().numpy(), k)
     distances[0] = distances[0][np.argsort(I[0])]
 
     return distances
