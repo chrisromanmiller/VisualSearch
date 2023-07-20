@@ -9,7 +9,7 @@ import os
 import pandas as pd
 from transformers import CLIPModel, CLIPProcessor
 import sys
-import web color
+import webcolors
 
 st.title("Mindblowing Demo")
 
