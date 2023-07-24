@@ -187,7 +187,10 @@ def segment_anything_pick_object(uploaded_image):
     if uploaded_image is not None:
         image = np.array(Image.open(uploaded_image))
 
+
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        if (image.shape[2] == 4):
+            image = image[:, :, 0:3]
         predictor.set_image(image_rgb)
 
         top_left, bottom_right, extra_point = select_rectangle_with_point(image_rgb)
