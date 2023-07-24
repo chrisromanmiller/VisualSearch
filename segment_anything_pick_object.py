@@ -3,9 +3,7 @@ from PIL import Image
 import numpy as np
 import cv2
 from segment_anything import sam_model_registry, SamPredictor
-
-
-sam_checkpoint ="./tensors/sam_vit_h_4b8939.pth"
+from paths import sam_checkpoint
 
 
 
@@ -179,6 +177,7 @@ def get_clicked_point(image):
 
 
 def segment_anything_pick_object(uploaded_image):
+
     model_type = "vit_h"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
