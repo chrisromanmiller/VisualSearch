@@ -1,5 +1,5 @@
 import streamlit as st
-from combined_search import combined_search
+from combined_search import *
 from segment_anything_pick_object import segment_anything_pick_object
 from displaying_images import display_images_ids_st
 

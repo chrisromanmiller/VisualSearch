@@ -3,8 +3,11 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import streamlit as st
+from paths import images_path
 
-images_path = "./myntradataset/images/"
+
+
+
 
 def display_images_and_titles(filepaths, titles):
     # Create a 4x5 grid of subplots
