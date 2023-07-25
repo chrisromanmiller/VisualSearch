@@ -186,7 +186,7 @@ def clip_text_search_get_distances(query, df):
     inputs = tokenizer(text,  padding=True, return_tensors="np")
     outputs = model(**inputs)
 
-    query_vectors = torch.load(text_only_title_tensor_path)
+    #query_vectors = torch.load(text_only_title_tensor_path)
     query_np = query_vectors.numpy()
 
     # Build the index

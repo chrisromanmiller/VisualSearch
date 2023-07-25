@@ -24,6 +24,8 @@ def combined_search(image, query, query2):
     length = df.shape[0]
 
 
+    if (query == "" and image is None):
+        return [], df
 
 
 
@@ -97,10 +99,6 @@ def combined_search(image, query, query2):
 
     # Creates a list of image ids from the top 20 products
     ids = df_subset.id.astype(str).tolist()
-
-
-    if (query == "" and query2 == "" and image is None):
-        return [], df
 
 
     return ids, df
