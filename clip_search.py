@@ -103,7 +103,6 @@ def clip_image_search_get_distances(path_to_image, df):
     distances, I = index.search(custom_embedding.detach().numpy(), k)
     distances[0] = distances[0][np.argsort(I[0])]
 
-
     return distances
 
 
