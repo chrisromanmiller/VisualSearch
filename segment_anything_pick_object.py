@@ -349,6 +349,11 @@ def color_change_image(image, masks, color):
 
 def pattern_change_image(image, masks, pattern_str):
 
+    int_mask = masks.astype(int)
+
+    width = image.shape[0]
+    height = image.shape[1]
+
     pattern_name = pattern_str.replace(" ", "_")
     pattern_path = './Fabric_Swatches/' + pattern_name + ".jpeg"
     pattern = Image.open(pattern_path)
@@ -360,13 +365,8 @@ def pattern_change_image(image, masks, pattern_str):
     pattern = cv2.imread(pattern_path)
     pattern = cv2.cvtColor(pattern, cv2.COLOR_BGR2RGB)
 
-    int_mask = masks.astype(int)
-
-    width = image.shape[0]
-    height = image.shape[1]
-
     #Fix a base color
-    startCol = AvgCol
+    startCol = get_avg_color(image, masks)
 
     dif = []
 
