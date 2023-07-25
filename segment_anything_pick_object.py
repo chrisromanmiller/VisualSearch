@@ -287,21 +287,10 @@ def color_change_image(image, masks, color):
     #Fix a base color
     startCol = get_avg_color(image, masks)
 
-    fixColor = []
-    fixColor.append(str(color[0]))
-    fixColor.append(str(color[1]))
-    fixColor.append(str(color[2]))
+    
 
-
-    if color[0]==255 and color[1]==0 and color[2]==0:
-        fixColor[1] ="65"
-    if color[0]==0 and color[1]==255 and color[2]==0:
-        fixColor[0] = "65"
-    if color[0]==0 and color[1]==0 and color[2]==255:
-        fixColor[1] = "65"
-
-    newColor = (int(fixColor[0]),int(fixColor[1]),int(fixColor[2]))
-
+    newColor = color
+    
     #How different is this base color from target color?
     dif1 = startCol[0][0] - newColor[0]
     dif2 = startCol[0][1] - newColor[1]

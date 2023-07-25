@@ -34,11 +34,11 @@ if uploaded_file is not None:
             cols = st.columns(2)
             with cols[0]:
                 left = st.slider(label="left", min_value = 0, max_value = image.shape[1])
-                top = st.slider(label="top", min_value = 0, max_value = image.shape[0])
+                right = st.slider(label="right", min_value = 0, max_value = image.shape[1])
                 x_coord = st.slider(label="x_coord", min_value = 0, max_value = image.shape[1])
             with cols[1]:
-                right = st.slider(label="right", min_value = 0, max_value = image.shape[1])
                 bottom = st.slider(label="bottom", min_value = 0, max_value = image.shape[0])
+                top = st.slider(label="top", min_value = 0, max_value = image.shape[0])
                 y_coord = st.slider(label="y_coord", min_value = 0, max_value = image.shape[0])
 
         image = select_rectangle_with_point_st(left, right, top, bottom, x_coord, y_coord, image)
@@ -48,10 +48,14 @@ if uploaded_file is not None:
 
     if (button and use_sam and not use_color_change):
         image_Seg, masks = segment_anything_pick_object(left, right, image.shape[0]-1-top, image.shape[0]-1-bottom, x_coord, image.shape[0]-1-y_coord, uploaded_file)
+        if (pattern_change != "keep original"):
+            pattern_change_image(image_Seg, masks, pattern_change)
         st.image(image_Seg, width = 200)
         st.text('Results:')
         ids, df = combined_search(image_Seg, query, query2)
         display_images_ids_st(ids, df)
+    
+    
     if (button and use_sam and use_color_change):
         image_Seg, masks = segment_anything_pick_object(left, right, image.shape[0]-1-top, image.shape[0]-1-bottom, x_coord, image.shape[0]-1-y_coord, uploaded_file)
         if (pattern_change != "keep original"):
