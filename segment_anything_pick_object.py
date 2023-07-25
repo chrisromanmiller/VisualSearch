@@ -176,7 +176,7 @@ def get_clicked_point(image):
 
 
 
-def segment_anything_pick_object(uploaded_image):
+def segment_anything_pick_object(left, right, top, bottom, x_coord, y_coord, uploaded_image):
 
     model_type = "vit_h"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -193,7 +193,11 @@ def segment_anything_pick_object(uploaded_image):
             image = image[:, :, 0:3]
         predictor.set_image(image_rgb)
 
-        top_left, bottom_right, extra_point = select_rectangle_with_point(image_rgb)
+        top_left = (left, top)
+        bottom_right = (right, bottom)
+        extra_point = (x_coord, y_coord)
+
+
 
         xyxy = list(top_left)
         temp = list(bottom_right)
@@ -217,5 +221,37 @@ def segment_anything_pick_object(uploaded_image):
                 # getting the current RGB value of pixel (i,j).
                 if int_mask[0][i][j]==0:
                     image[i][j]=(255,255,255)
+
+    return image
+
+
+
+
+
+def select_rectangle_with_point_st(left, right, top, bottom, x_coord, y_coord, image):
+
+    top = image.shape[0]-1-top
+    bottom = image.shape[0]-1-bottom
+    y_coord = image.shape[0]-1-y_coord
+
+    if (image.shape[2] == 4):
+        image = image[:, :, 0:3]
+
+    green = np.array([[[0, 255, 0]]])
+    red = np.array([[[255, 0, 0]]])
+
+    left_shape = image[top:bottom, left:left+10, 0:3].shape
+    right_shape = image[top:bottom, right-10:right, 0:3].shape
+    top_shape = image[top:top+10, left:right, 0:3].shape
+    bottom_shape = image[bottom-10:bottom, left:right, 0:3].shape
+
+    ex_pnt_shape = image[y_coord-10:y_coord+10, x_coord-10:x_coord+10, 0:3].shape
+
+    image[top:top+10, left:right, 0:3] = np.repeat(np.repeat(green, right-left, axis=1), top_shape[0], axis=0)
+    image[bottom-10:bottom, left:right, 0:3] = np.repeat(np.repeat(green, right-left, axis=1), bottom_shape[0], axis=0)
+    image[top:bottom, left:left+10, 0:3] = np.repeat(np.repeat(green, left_shape[1], axis=1), bottom-top, axis=0)
+    image[top:bottom, right-10:right, 0:3] = np.repeat(np.repeat(green, right_shape[1], axis=1), bottom-top, axis=0)
+
+    image[y_coord-10:y_coord+10, x_coord-10:x_coord+10, 0:3] = np.repeat(np.repeat(red, ex_pnt_shape[1], axis=1), ex_pnt_shape[0], axis=0)
 
     return image
